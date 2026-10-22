@@ -3,6 +3,7 @@ import { h, llenar, dinero, fechaCorta, toast, formulario, confirmar, avisarCamb
 import * as db from './db.js';
 import { calcularResumen, cerrarDia, cierresRecientes, filaCierre } from './cierre.js';
 import { sugerencia } from './preparar.js';
+import { resumenSemana, textoResumen, graficaSemana } from './semana.js';
 
 const PERIODOS = {
   hoy: 'Hoy',
@@ -88,6 +89,7 @@ export async function render(el) {
   const r = await calcularResumen(desde, hasta);
   const rapidos = await gastosRapidos();
   const prep = await sugerencia();
+  const semana = await resumenSemana();
   const cierres = await cierresRecientes();
   const todas = (await db.getRango('ventas', desde, hasta)).sort((a, b) => b.fecha - a.fecha);
 
@@ -121,6 +123,17 @@ export async function render(el) {
     h('p', { class: 'etiqueta', style: 'margin-top:8px;font-size:.85rem' },
       '"Debe haber en caja" = ventas en efectivo + fiado que te pagaron − gastos pagados con la caja. Sin contar tu fondo.'),
     periodo === 'hoy' && h('button', { class: 'btn verde grande', style: 'margin-top:12px', onclick: cerrarDia }, '🔒 Cerrar el día'),
+
+    h('h2', {}, '📊 Esta semana'),
+    h('div', { class: 'tarjeta semana-tarjeta' },
+      h('small', {}, 'Vendido por día'),
+      graficaSemana(semana),
+      h('div', { class: 'semana-totales' },
+        h('span', {}, 'Vendiste ', h('b', {}, dinero(semana.vendido))),
+        h('span', {}, 'Ganaste ', h('b', {}, dinero(semana.ganancia))),
+        semana.cambio !== null && h('span', { class: semana.cambio >= 0 ? 'afavor' : 'debe' },
+          `${semana.cambio >= 0 ? '▲' : '▼'} ${Math.abs(semana.cambio)}% vs. semana pasada`))),
+    h('button', { class: 'btn grande', style: 'margin-top:10px', onclick: () => compartirTexto(textoResumen(semana)) }, '📤 Mandarme el resumen por WhatsApp'),
 
     h('h2', {}, '🧾 Gastos'),
     h('div', { class: 'periodos' }, rapidos.map(g =>

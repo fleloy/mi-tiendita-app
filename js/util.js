@@ -184,3 +184,26 @@ export async function compartirTexto(texto, telefono) {
 export function hoyISO(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+
+// Bip corto para confirmar en el ruido del recreo. Se apaga en "Más → Sonidos".
+let audio;
+export function sonar(tipo = 'venta') {
+  if (leerLocal('sonido') === 'no') return;
+  try {
+    audio ||= new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === 'suspended') audio.resume();
+    const notas = tipo === 'entregado' ? [660, 990] : [880];
+    notas.forEach((f, i) => {
+      const o = audio.createOscillator();
+      const g = audio.createGain();
+      const t0 = audio.currentTime + i * 0.11;
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.25, t0 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.09);
+      o.connect(g).connect(audio.destination);
+      o.start(t0);
+      o.stop(t0 + 0.1);
+    });
+  } catch { /* sin audio */ }
+}

@@ -1,6 +1,6 @@
 // Pedidos por entregar: cada venta cobrada recibe un número del día y queda
 // pendiente hasta que quien sirve la entrega.
-import { h, llenar, toast, vacio, avisarCambio, leerLocal } from './util.js';
+import { h, llenar, toast, vacio, avisarCambio, leerLocal, sonar } from './util.js';
 import * as db from './db.js';
 
 export const activo = () => leerLocal('pedidos') !== 'no';
@@ -31,6 +31,7 @@ async function marcar(v, entregado) {
   v.entregado = entregado;
   await db.put('ventas', v);
   avisarCambio();
+  if (entregado) sonar('entregado');
   if (entregado) toast(`Pedido #${v.turno} entregado`, { texto: 'Deshacer', fn: () => marcar(v, false) });
 }
 

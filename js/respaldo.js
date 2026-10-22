@@ -3,8 +3,9 @@ import { h, llenar, toast, confirmar, fechaCorta, leerLocal, guardarLocal, avisa
 import * as db from './db.js';
 import { abrirGuia } from './guia.js';
 import { instalada, puedeInstalar, instalar } from './instalar.js';
+import { tienePin, pedirPin, ponerPin, cambiarPin, quitarPin } from './pin.js';
 
-export const VERSION = '3.1';
+export const VERSION = '4';
 
 function seccionInstalar() {
   if (instalada()) return h('p', { class: 'estado-datos' }, '✅ La app está instalada en este celular.');
@@ -45,6 +46,21 @@ export async function render(el) {
         avisarCambio();
       } }),
       'Usar lista de pedidos por entregar (le da un número a cada pedido)'),
+    h('label', { class: 'check', style: 'margin-top:12px' },
+      h('input', { type: 'checkbox', checked: leerLocal('sonido') !== 'no', onchange: e => {
+        guardarLocal('sonido', e.target.checked ? 'si' : 'no');
+      } }),
+      'Sonidos al cobrar y al entregar'),
+
+    h('h2', {}, '🔐 PIN'),
+    h('p', {}, tienePin()
+      ? 'El PIN protege Ganancias, borrar productos o cuentas y recuperar o borrar datos.'
+      : 'Pon un PIN de 4 números para que nadie más vea tus ganancias ni borre cosas. Cobrar y entregar no lo piden.'),
+    tienePin()
+      ? h('div', { class: 'fila' },
+        h('button', { class: 'btn', onclick: async () => { await cambiarPin(); avisarCambio(); } }, 'Cambiar PIN'),
+        h('button', { class: 'btn peligro', onclick: async () => { await quitarPin(); avisarCambio(); } }, 'Quitar PIN'))
+      : h('button', { class: 'btn grande', onclick: async () => { await ponerPin(); avisarCambio(); } }, '🔐 Poner PIN'),
 
     h('h2', {}, '💾 Respaldo'),
     h('p', { class: 'estado-datos' }, protegidos
@@ -54,7 +70,7 @@ export async function render(el) {
     h('p', { class: 'etiqueta' }, ultimo ? `Último respaldo: ${fechaCorta(ultimo)}` : 'Todavía no has hecho ningún respaldo'),
     h('div', { class: 'lista', style: 'margin-top:10px' },
       h('button', { class: 'btn primario grande', onclick: exportar }, '📤 Guardar / compartir respaldo'),
-      h('button', { class: 'btn grande', onclick: () => archivo.click() }, '📥 Recuperar un respaldo'),
+      h('button', { class: 'btn grande', onclick: async () => { if (await pedirPin('Escribe tu PIN para recuperar un respaldo')) archivo.click(); } }, '📥 Recuperar un respaldo'),
       archivo),
 
     h('h2', {}, '🧰 Otros'),
@@ -116,6 +132,7 @@ async function importar(e) {
 }
 
 async function borrarTodo() {
+  if (!await pedirPin('Escribe tu PIN para borrar todo')) return;
   if (!await confirmar('Se borrarán productos, ventas y cuentas. Antes se guardará una copia por si acaso.', 'Borrar todo')) return;
   await respaldoDeSeguridad();
   await db.reemplazarTodo({});

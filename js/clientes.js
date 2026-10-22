@@ -2,6 +2,7 @@
 // Saldo negativo = debe. Cada cuenta puede tener un límite y productos que no se le venden.
 import { h, llenar, dinero, fechaCorta, toast, modal, formulario, confirmar, vacio, avisarCambio, compartirTexto } from './util.js';
 import * as db from './db.js';
+import { pedirPin } from './pin.js';
 
 async function campos() {
   const productos = (await db.getAll('productos')).map(p => [p.id, `${p.emoji || ''} ${p.nombre}`]);
@@ -112,6 +113,12 @@ async function mandarCuenta(c) {
   compartirTexto(texto, c.telefono);
 }
 
+// Para el aviso de los viernes: abre la lista de quienes deben.
+export async function abrirCobroViernes() {
+  const deben = (await db.getAll('clientes')).filter(c => c.saldo < 0);
+  if (deben.length) cobroViernes(deben);
+}
+
 function cobroViernes(deben) {
   deben = [...deben].sort((a, b) => a.saldo - b.saldo);
   modal('📋 Lista para cobrar', [
@@ -168,7 +175,7 @@ async function detalle(c) {
       } }, '✏️ Editar'),
       h('button', { class: 'btn peligro', onclick: async () => {
         if (c.saldo !== 0) { toast('Primero deja la cuenta en $0'); return; }
-        if (await confirmar(`¿Borrar la cuenta de ${c.nombre}?`, 'Borrar')) { await db.del('clientes', c.id); m.cerrar(); avisarCambio(); }
+        if (await pedirPin('Escribe tu PIN para borrar') && await confirmar(`¿Borrar la cuenta de ${c.nombre}?`, 'Borrar')) { await db.del('clientes', c.id); m.cerrar(); avisarCambio(); }
       } }, 'Borrar')),
   ]);
 }

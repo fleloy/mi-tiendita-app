@@ -339,3 +339,27 @@ button.item:active { border-color: var(--rosa); }
 
 /* Campos que solo aparecen con su casilla marcada */
 .campo[hidden] { display: none; }
+
+/* Gráfica de la semana: una serie, barras con 4px redondeados arriba y montos en texto */
+.semana { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; height: 150px; margin: 10px 0 8px; }
+.semana-dia { display: grid; grid-template-rows: auto 1fr auto; gap: 4px; text-align: center; min-width: 0; }
+.semana-monto { font-size: .72rem; color: var(--suave); white-space: nowrap; }
+.semana-barra { display: flex; align-items: flex-end; border-bottom: 1px solid var(--borde); }
+.semana-barra i { display: block; width: 100%; min-height: 2px; background: var(--magenta); border-radius: 4px 4px 0 0; }
+.semana-nombre { font-size: .8rem; color: var(--suave); text-transform: capitalize; }
+.semana-dia.hoy .semana-nombre, .semana-dia.hoy .semana-monto { color: var(--texto); font-weight: 600; }
+.semana-dia.futuro .semana-barra i { background: transparent; }
+.semana-totales { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .9rem; color: var(--suave); }
+.semana-totales b { color: var(--texto); }
+
+/* PIN */
+.pin-msg { margin-bottom: 6px; }
+.pin-puntos { display: flex; justify-content: center; gap: 16px; margin: 10px 0 18px; }
+.pin-puntos i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--rosa); }
+.pin-puntos i.lleno { background: var(--rosa); box-shadow: 0 0 10px rgba(255, 110, 240, .5); }
+.pin-teclado { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 320px; margin: 0 auto; }
+.pin-teclado .btn { min-height: 64px; font-size: 1.6rem; border-radius: 18px; }
+.pin-olvide { margin-top: 14px; background: transparent; border: 0; color: var(--suave); font-weight: 500; }
+
+/* Repetir pedido */
+.repetir { margin-top: 14px; border-style: dashed; border-color: var(--rosa); color: var(--rosa-claro); font-size: 1rem; line-height: 1.3; }

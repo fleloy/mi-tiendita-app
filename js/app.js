@@ -5,9 +5,10 @@ import * as inventario from './inventario.js';
 import * as clientes from './clientes.js';
 import * as reportes from './reportes.js';
 import * as respaldo from './respaldo.js';
-import { h, llenar, leerLocal, toast } from './util.js';
+import { h, llenar, leerLocal, guardarLocal, toast, dinero, hoyISO } from './util.js';
 import * as db from './db.js';
 import { abrirGuia, guiaVista } from './guia.js';
+import { pedirPin } from './pin.js';
 
 const PANTALLAS = {
   vender: { mod: vender, titulo: 'Vender' },
@@ -51,7 +52,8 @@ async function contarPedidos() {
 // Mantener al día el "hace X min" mientras se ve la lista de pedidos.
 setInterval(() => { if (actual === 'pedidos' && !document.querySelector('dialog')) pintar(); }, 30000);
 
-export function ir(tab) {
+export async function ir(tab) {
+  if (tab === 'reportes' && actual !== 'reportes' && !await pedirPin('Escribe tu PIN para ver Ganancias')) return;
   actual = tab;
   window.scrollTo(0, 0);
   pintar();
@@ -65,6 +67,19 @@ async function revisarRespaldo() {
     return;
   }
   if (db.modoPractica()) { aviso.replaceChildren(); return; }
+  // Los viernes los papás pagan: recordar cuánto le deben (una vez al día, hasta que lo toque).
+  if (new Date().getDay() === 5 && leerLocal('viernesVisto') !== hoyISO() && actual !== 'clientes') {
+    const deben = (await db.getAll('clientes')).filter(c => c.saldo < 0);
+    if (deben.length) {
+      const total = deben.reduce((s, c) => s - c.saldo, 0);
+      aviso.replaceChildren(h('button', { class: 'aviso-respaldo aviso-instalar', onclick: async () => {
+        guardarLocal('viernesVisto', hoyISO());
+        await ir('clientes');
+        clientes.abrirCobroViernes();
+      } }, `📅 Hoy es viernes: te deben ${dinero(total)} entre ${deben.length} persona(s). Toca para cobrar.`));
+      return;
+    }
+  }
   // Si nunca ha respaldado, contar desde su primera venta (no molestar el primer día).
   const ultimo = Number(leerLocal('ultimoRespaldo') || 0) || (await db.primero('ventas'))?.fecha;
   const dias = ultimo ? Math.floor((Date.now() - ultimo) / 864e5) : 0;

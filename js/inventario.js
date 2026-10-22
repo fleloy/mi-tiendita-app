@@ -1,6 +1,7 @@
 // Productos del menú. El conteo de existencias es opcional (la comida se hace al día).
 import { h, llenar, dinero, toast, formulario, confirmar, vacio, avisarCambio, compartirTexto, hoyISO, CATEGORIAS } from './util.js';
 import * as db from './db.js';
+import { pedirPin } from './pin.js';
 
 const CAMPOS = [
   { name: 'emoji', label: 'Dibujito', type: 'emoji' },
@@ -66,7 +67,7 @@ async function editar(p, categoria = 'comida') {
       avisarCambio();
     } }, p.activo === false ? '👁️ Mostrar en Vender' : '🙈 Ocultar de Vender'),
     h('button', { type: 'button', class: 'btn peligro', onclick: async () => {
-      if (await confirmar(`¿Borrar "${p.nombre}"? Las ventas pasadas no se pierden.`, 'Borrar')) {
+      if (await pedirPin('Escribe tu PIN para borrar') && await confirmar(`¿Borrar "${p.nombre}"? Las ventas pasadas no se pierden.`, 'Borrar')) {
         await db.del('productos', p.id);
         cerrar();
         avisarCambio();

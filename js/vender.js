@@ -1,5 +1,5 @@
 // Pantalla de cobro: tocar productos, cobrar y calcular el cambio.
-import { h, llenar, dinero, r2, toast, modal, confirmar, vacio, avisarCambio, leerLocal, guardarLocal, hoyISO, CATEGORIAS } from './util.js';
+import { h, llenar, dinero, r2, toast, modal, confirmar, vacio, avisarCambio, leerLocal, guardarLocal, hoyISO, sonar, CATEGORIAS } from './util.js';
 import * as db from './db.js';
 import { elegirCliente } from './clientes.js';
 import * as pedidos from './pedidos.js';
@@ -8,6 +8,8 @@ let ticket = []; // [{ p, cant }]
 let productos = [];
 let categoria = 'todo';
 let cont;
+let cuentas = [];      // para avisar "no venderle" aunque paguen en efectivo
+let ultimoPedido = []; // [{ id, cant }] para "Repetir"
 
 const total = () => r2(ticket.reduce((s, t) => s + t.p.precio * t.cant, 0));
 const ir = tab => window.dispatchEvent(new CustomEvent('ir', { detail: tab }));
@@ -15,6 +17,7 @@ const ir = tab => window.dispatchEvent(new CustomEvent('ir', { detail: tab }));
 export async function render(el) {
   cont = el;
   productos = await ordenar((await db.getAll('productos')).filter(p => p.activo !== false));
+  cuentas = await db.getAll('clientes');
   // Si un producto cambió de precio mientras estaba en el ticket, usar el dato nuevo.
   ticket = ticket
     .map(t => ({ ...t, p: productos.find(p => p.id === t.p.id) }))
@@ -111,8 +114,20 @@ function quitarUno(t) {
   pintar();
 }
 
+// Lo del pedido anterior que se puede volver a vender (sin lo que se acabó o se ocultó).
+function repetibles() {
+  return ultimoPedido
+    .map(({ id, cant }) => ({ p: productos.find(p => p.id === id), cant }))
+    .filter(t => t.p && !agotado(t.p));
+}
+
 function barraTicket() {
-  if (!ticket.length) return h('div', { class: 'ticket-vacio' }, 'Toca los productos para cobrar 👆');
+  if (!ticket.length) {
+    const rep = repetibles();
+    if (!rep.length) return h('div', { class: 'ticket-vacio' }, 'Toca los productos para cobrar 👆');
+    return h('button', { class: 'btn grande repetir', onclick: () => { ticket = rep.map(t => ({ ...t })); pintar(); } },
+      '🔁 Repetir: ', rep.map(t => `${t.cant}× ${t.p.nombre}`).join(', '));
+  }
   return h('div', { class: 'ticket' },
     h('div', { class: 'items' }, ticket.map(t =>
       h('button', { class: 'chip', onclick: () => quitarUno(t), title: 'Quitar uno' }, `${t.cant}× ${t.p.nombre} ✕`))),
@@ -141,9 +156,8 @@ function cobrar() {
       : h('span', {}, 'Su cambio', h('strong', {}, dinero(c))));
   }
   otro.oninput = () => { if (otro.value) elegir(Number(otro.value), null); };
-  const nombre = pedidos.activo()
-    ? h('input', { class: 'buscar', type: 'text', placeholder: '🧒 Nombre del niño (opcional)', autocomplete: 'off' })
-    : null;
+  const sugerencias = h('datalist', { id: 'nombres-cuentas' }, cuentas.map(c => h('option', { value: c.nombre })));
+  const nombre = h('input', { class: 'buscar', type: 'text', list: 'nombres-cuentas', placeholder: '🧒 Nombre del niño (opcional)', autocomplete: 'off' });
 
   const m = modal('Cobrar', [
     h('p', { class: 'etiqueta' }, 'Total'),
@@ -152,23 +166,42 @@ function cobrar() {
     h('div', { class: 'billetes' }, botones),
     otro,
     cambio,
-    nombre,
+    nombre, sugerencias,
     h('div', { class: 'fila' },
       h('button', { class: 'btn', onclick: async () => {
         const c = await elegirCliente('¿A la cuenta de quién?');
         if (c && await revisarCuenta(c, tot)) { m.cerrar(); finalizar('cuenta', c, nombre?.value.trim()); }
       } }, '📒 Fiado / a cuenta'),
-      h('button', { class: 'btn verde', onclick: () => {
+      h('button', { class: 'btn verde', onclick: async () => {
         if (pago != null && pago < tot) { toast('Todavía le falta dinero'); return; }
-        m.cerrar(); finalizar('efectivo', null, nombre?.value.trim());
+        const c = buscarCuenta(nombre.value);
+        if (c && !await avisoNoVender(c)) return;
+        m.cerrar(); finalizar('efectivo', null, nombre.value.trim());
       } }, '✔ Cobrado')),
   ]);
 }
 
+const normal = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
+// La cuenta que corresponde al nombre escrito: nombre completo igual, o una sola cuenta que empiece así.
+function buscarCuenta(texto) {
+  const t = normal(texto || '');
+  if (t.length < 2) return null;
+  const exacta = cuentas.find(c => normal(c.nombre) === t);
+  if (exacta) return exacta;
+  const empiezan = cuentas.filter(c => normal(c.nombre).startsWith(t));
+  return empiezan.length === 1 ? empiezan[0] : null;
+}
+
+// true si se puede vender: no hay nada prohibido en el ticket o se confirma venderlo igual.
+async function avisoNoVender(c) {
+  const prohibidos = ticket.filter(t => (c.noVender || []).includes(t.p.id)).map(t => t.p.nombre);
+  return !prohibidos.length || confirmar(`🚫 A ${c.nombre} sus papás pidieron no venderle: ${prohibidos.join(', ')}. ¿Venderle de todos modos?`, 'Vender');
+}
+
 // Avisa si los papás pidieron no venderle algo del ticket o si se pasa de su límite.
 async function revisarCuenta(c, tot) {
-  const prohibidos = ticket.filter(t => (c.noVender || []).includes(t.p.id)).map(t => t.p.nombre);
-  if (prohibidos.length && !await confirmar(`🚫 Sus papás pidieron no venderle: ${prohibidos.join(', ')}. ¿Venderle de todos modos?`, 'Vender')) return false;
+  if (!await avisoNoVender(c)) return false;
   const deberia = r2(-(c.saldo || 0) + tot);
   if (c.limite > 0 && deberia > c.limite && !await confirmar(`⚠️ ${c.nombre} tiene límite de ${dinero(c.limite)} y quedaría debiendo ${dinero(deberia)}. ¿Fiarle de todos modos?`, 'Fiar')) return false;
   return true;
@@ -187,6 +220,8 @@ async function finalizar(pago, cliente, nombre) {
     clienteNombre: cliente?.nombre ?? null,
   };
   const id = await db.registrarVenta(venta);
+  sonar('venta');
+  ultimoPedido = ticket.map(t => ({ id: t.p.id, cant: t.cant }));
   ticket = [];
   avisarCambio();
   const msg = (conPedido ? `Pedido #${venta.turno} · ` : '')

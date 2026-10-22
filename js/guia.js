@@ -15,6 +15,7 @@ const PASOS = [
     titulo: '2. Cobra en el recreo',
     texto: [
       'En "Vender" toca lo que pide el niño. Si te equivocas, toca el producto en la barra de abajo para quitarlo.',
+      'Si el siguiente niño pide lo mismo, toca "🔁 Repetir".',
       'Toca "Cobrar", elige con cuánto te pagó y la app te dice el cambio.',
       'Cada pedido recibe un número. En "Entregar" ves qué servir y lo marcas como entregado.',
     ],
@@ -34,6 +35,7 @@ const PASOS = [
     texto: [
       'En "Ganancias" anota lo que gastaste y toca "Cerrar el día". Cuenta tu caja y la app te dice si cuadra.',
       'Guarda el respaldo y mándatelo por WhatsApp: así nunca pierdes tus datos.',
+      'En "Más" puedes poner un PIN para que nadie más vea tus ganancias ni borre cosas.',
       'Para practicar sin miedo, en "Más" activa el Modo práctica.',
     ],
   },
