@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía rápida — Mi Tiendita</title>
+<style>
+  @page { size: letter; margin: 14mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Fredoka", system-ui, sans-serif; color: #1a1420; margin: 0; padding: 16px; background: #fff; }
+  .hoja { max-width: 760px; margin: 0 auto; }
+  header { display: flex; align-items: center; gap: 14px; border-bottom: 4px solid #e0157d; padding-bottom: 10px; margin-bottom: 14px; }
+  header img { width: 64px; height: 64px; border-radius: 14px; }
+  h1 { margin: 0; font-size: 28px; color: #e0157d; }
+  header p { margin: 2px 0 0; color: #6b5a78; }
+  .pasos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .paso { border: 2px solid #f3c2e6; border-radius: 14px; padding: 12px 14px; break-inside: avoid; }
+  .paso h2 { margin: 0 0 6px; font-size: 18px; color: #a50d5b; }
+  .paso ol, .paso ul { margin: 0; padding-left: 20px; line-height: 1.4; font-size: 15px; }
+  .tip { margin-top: 12px; background: #fde8f7; border-radius: 12px; padding: 10px 14px; font-size: 15px; }
+  .tip b { color: #a50d5b; }
+  @media (max-width: 600px) { .pasos { grid-template-columns: 1fr; } }
+  @media print { body { padding: 0; } .no-imprimir { display: none; } }
+  .no-imprimir { text-align: center; margin: 16px 0; }
+  .no-imprimir button { font: inherit; font-size: 16px; padding: 10px 20px; border: 0; border-radius: 10px; background: #e0157d; color: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="hoja">
+  <header>
+    <img src="../icons/icon-192.png" alt="">
+    <div>
+      <h1>Mi Tiendita — Guía rápida</h1>
+      <p>Para tenerla a la mano en la tiendita</p>
+    </div>
+  </header>
+
+  <div class="pasos">
+    <section class="paso">
+      <h2>🛒 Cobrar</h2>
+      <ol>
+        <li>En <b>Vender</b> toca lo que pide el niño.</li>
+        <li>¿Te equivocaste? Toca el producto en la barra de abajo para quitarlo.</li>
+        <li>Toca <b>Cobrar</b> y elige con cuánto pagó: la app te dice el <b>cambio</b>.</li>
+        <li>Dile al niño su <b>número de pedido</b>.</li>
+      </ol>
+    </section>
+    <section class="paso">
+      <h2>🍽️ Entregar</h2>
+      <ol>
+        <li>En <b>Entregar</b> están los pedidos en orden.</li>
+        <li>Sirve lo que dice y toca <b>✔ Entregado</b>.</li>
+        <li>Si te equivocas, toca <b>↩️</b> para regresarlo.</li>
+      </ol>
+    </section>
+    <section class="paso">
+      <h2>📒 Fiado</h2>
+      <ol>
+        <li>Al cobrar toca <b>Fiado / a cuenta</b> y elige al niño o maestro.</li>
+        <li>La app avisa si se pasa de su límite o si sus papás pidieron no venderle algo.</li>
+        <li>El viernes, en <b>Cuentas → Lista para cobrar</b>, manda la cuenta por WhatsApp.</li>
+        <li>Cuando paguen: abre su cuenta y toca <b>💵 Pagó</b>.</li>
+      </ol>
+    </section>
+    <section class="paso">
+      <h2>🔒 Al terminar el día</h2>
+      <ol>
+        <li>En <b>Ganancias</b> anota lo que gastaste (pollo, tortillas, gas…).</li>
+        <li>Toca <b>Cerrar el día</b>, cuenta tu caja y escribe cuánto hay.</li>
+        <li>Toca <b>Guardar respaldo</b> y mándatelo por WhatsApp.</li>
+      </ol>
+    </section>
+  </div>
+
+  <div class="tip">
+    <b>Se acabó un platillo:</b> déjalo presionado en Vender y se pone gris. Al día siguiente vuelve solo.<br>
+    <b>¿Cobraste mal?</b> En Ganancias → Ventas, toca ✕ para cancelar esa venta.<br>
+    <b>¿Quieres practicar?</b> En Más activa el <b>Modo práctica</b>: lo que hagas ahí no cuenta.
+  </div>
+
+  <div class="no-imprimir"><button onclick="print()">🖨️ Imprimir</button></div>
+</div>
+</body>
+</html>
