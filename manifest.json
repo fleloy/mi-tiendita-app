@@ -1,16 +1,20 @@
 {
+  "id": "./",
   "name": "Mi Tiendita",
   "short_name": "Tiendita",
-  "description": "Cobro, inventario, fiado y ganancias para la tiendita escolar",
+  "description": "Cobro, pedidos, fiado y ganancias para la tiendita escolar",
   "lang": "es-MX",
+  "dir": "ltr",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0b0a0e",
   "theme_color": "#0b0a0e",
+  "categories": ["business", "productivity"],
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

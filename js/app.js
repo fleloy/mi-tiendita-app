@@ -1,3 +1,4 @@
+import * as instalacion from './instalar.js'; // primero, para no perder el aviso de "se puede instalar"
 import * as vender from './vender.js';
 import * as pedidos from './pedidos.js';
 import * as inventario from './inventario.js';
@@ -58,6 +59,11 @@ export function ir(tab) {
 
 async function revisarRespaldo() {
   const aviso = document.getElementById('aviso');
+  if (instalacion.puedeInstalar()) {
+    aviso.replaceChildren(h('button', { class: 'aviso-respaldo aviso-instalar', onclick: instalacion.instalar },
+      '📲 Instala la app en tu celular para usarla sin internet. Toca aquí.'));
+    return;
+  }
   if (db.modoPractica()) { aviso.replaceChildren(); return; }
   // Si nunca ha respaldado, contar desde su primera venta (no molestar el primer día).
   const ultimo = Number(leerLocal('ultimoRespaldo') || 0) || (await db.primero('ventas'))?.fecha;

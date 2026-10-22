@@ -333,3 +333,6 @@ button.item:active { border-color: var(--rosa); }
 }
 .franja-practica button { border: 0; background: #04131b; color: #fff; border-radius: 10px; padding: 6px 12px; font-weight: 600; }
 .estado-datos { margin: 0 0 10px; }
+
+/* Aviso para instalar */
+.aviso-instalar { background: rgba(255, 110, 240, .14); color: var(--rosa-claro); border-bottom-color: rgba(255, 110, 240, .35); font-weight: 600; }

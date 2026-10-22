@@ -2,8 +2,23 @@
 import { h, llenar, toast, confirmar, fechaCorta, leerLocal, guardarLocal, avisarCambio, hoyISO } from './util.js';
 import * as db from './db.js';
 import { abrirGuia } from './guia.js';
+import { instalada, puedeInstalar, instalar } from './instalar.js';
 
-export const VERSION = '3';
+export const VERSION = '3.1';
+
+function seccionInstalar() {
+  if (instalada()) return h('p', { class: 'estado-datos' }, '✅ La app está instalada en este celular.');
+  if (puedeInstalar()) {
+    return h('button', { class: 'btn primario grande', onclick: instalar }, '📲 Instalar la app en este celular');
+  }
+  return h('div', { class: 'alerta' },
+    h('b', {}, '📲 Para instalarla en el celular:'),
+    h('ul', {},
+      h('li', {}, 'Chrome: toca ⋮ → "Instalar app" o "Añadir a pantalla de inicio".'),
+      h('li', {}, 'Si no aparece: toca ⋮ → "Compartir…" → "Añadir a pantalla de inicio".'),
+      h('li', {}, 'Firefox: toca ⋮ → "Instalar" o "Agregar a la pantalla de inicio".')),
+    h('small', {}, 'En Xiaomi/Poco, si no sale el ícono: Ajustes → Apps → Chrome → Otros permisos → activa "Accesos directos en pantalla de inicio".'));
+}
 
 export async function render(el) {
   const ultimo = Number(leerLocal('ultimoRespaldo') || 0);
@@ -13,6 +28,9 @@ export async function render(el) {
 
   llenar(el,
     h('button', { class: 'btn primario grande', onclick: abrirGuia }, '📖 Cómo se usa'),
+
+    h('h2', {}, '📲 Instalar'),
+    seccionInstalar(),
 
     h('h2', {}, '🎓 Modo práctica'),
     h('p', {}, practica
