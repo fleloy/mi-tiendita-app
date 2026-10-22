@@ -8,8 +8,8 @@ const CAMPOS = [
   { name: 'precio', label: 'Precio ($)', type: 'number', required: true, min: 0 },
   { name: 'categoria', label: 'Tipo', type: 'select', opciones: CATEGORIAS },
   { name: 'conteo', label: 'Llevar conteo de cuántos quedan (para cosas compradas, como aguas)', type: 'checkbox' },
-  { name: 'existencias', label: '¿Cuántos tienes ahorita? (solo si llevas conteo)', type: 'number' },
-  { name: 'minimo', label: 'Avisarme cuando queden (solo si llevas conteo)', type: 'number', min: 0 },
+  { name: 'existencias', label: '¿Cuántos tienes ahorita?', type: 'number', mostrarSi: 'conteo' },
+  { name: 'minimo', label: 'Avisarme cuando queden', type: 'number', min: 0, mostrarSi: 'conteo' },
 ];
 
 const conConteo = p => p.conteo !== false;
@@ -55,8 +55,9 @@ function fila(p) {
       h('button', { class: 'btn', onclick: () => editar(p) }, '✏️')));
 }
 
-async function editar(p) {
-  const valores = p ? { ...p, conteo: conConteo(p) } : { emoji: '🛒', categoria: 'comida', conteo: false, existencias: 0, minimo: 5 };
+// `categoria` es el tipo con el que empieza un producto nuevo (el del anterior al usar "agregar otro").
+async function editar(p, categoria = 'comida') {
+  const valores = p ? { ...p, conteo: conConteo(p) } : { emoji: '🛒', categoria, conteo: false, existencias: 0, minimo: 5 };
   const extra = p && (cerrar => h('div', { class: 'fila' },
     h('button', { type: 'button', class: 'btn', onclick: async () => {
       p.activo = p.activo === false;
@@ -71,11 +72,14 @@ async function editar(p) {
         avisarCambio();
       }
     } }, 'Borrar')));
-  const v = await formulario(p ? 'Editar producto' : 'Nuevo producto', CAMPOS, valores, { extra });
+  const v = await formulario(p ? 'Editar producto' : 'Nuevo producto', CAMPOS, valores,
+    { extra, textoOtro: p ? null : 'Guardar y agregar otro' });
   if (!v) return;
-  await db.put('productos', { ...p, ...v, activo: p?.activo ?? true });
-  toast('Producto guardado');
+  const { otro, ...datos } = v;
+  await db.put('productos', { ...p, ...datos, activo: p?.activo ?? true });
+  toast(`${datos.nombre} guardado`);
   avisarCambio();
+  if (otro) editar(null, datos.categoria);
 }
 
 async function entrada(p) {

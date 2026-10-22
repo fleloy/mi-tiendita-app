@@ -336,3 +336,6 @@ button.item:active { border-color: var(--rosa); }
 
 /* Aviso para instalar */
 .aviso-instalar { background: rgba(255, 110, 240, .14); color: var(--rosa-claro); border-bottom-color: rgba(255, 110, 240, .35); font-weight: 600; }
+
+/* Campos que solo aparecen con su casilla marcada */
+.campo[hidden] { display: none; }

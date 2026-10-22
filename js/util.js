@@ -113,14 +113,23 @@ function campo(c, valor) {
 }
 
 // Formulario en ventana. Resuelve con los valores o null si se cancela.
-export function formulario(titulo, campos, valores = {}, { textoBoton = 'Guardar', extra } = {}) {
+// Con `textoOtro` aparece un segundo botón; el resultado trae `otro: true` si se usó ese.
+// Un campo con `mostrarSi: 'nombreCasilla'` solo se ve cuando esa casilla está marcada.
+export function formulario(titulo, campos, valores = {}, { textoBoton = 'Guardar', textoOtro, extra } = {}) {
   return new Promise(res => {
     let hecho = false;
+    const etiquetas = campos.map(c => campo(c, valores[c.name]));
     const f = h('form', { class: 'form' },
-      campos.map(c => campo(c, valores[c.name])),
+      etiquetas,
       // `extra` puede ser una función que recibe cómo cerrar el formulario.
       typeof extra === 'function' ? extra(() => m.cerrar()) : extra,
-      h('button', { class: 'btn primario grande', type: 'submit' }, textoBoton));
+      h('button', { class: 'btn primario grande', type: 'submit' }, textoBoton),
+      textoOtro && h('button', { class: 'btn grande', type: 'submit', 'data-otro': '1' }, textoOtro));
+    const condicionales = campos.map((c, i) => [c, etiquetas[i]]).filter(([c]) => c.mostrarSi);
+    const actualizar = () => {
+      for (const [c, el] of condicionales) el.hidden = !f.elements[c.mostrarSi]?.checked;
+    };
+    if (condicionales.length) { f.addEventListener('change', actualizar); actualizar(); }
     f.onsubmit = e => {
       e.preventDefault();
       const out = {};
@@ -134,6 +143,7 @@ export function formulario(titulo, campos, valores = {}, { textoBoton = 'Guardar
           : c.type === 'number' ? (i.value === '' ? 0 : Number(i.value))
           : i.value.trim();
       }
+      if (e.submitter?.dataset.otro) out.otro = true;
       hecho = true;
       m.cerrar();
       res(out);
