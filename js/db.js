@@ -174,14 +174,14 @@ export function cargarEjemplo() {
       p('🥞', 'Hot cakes', 15, 'comida'),
       p('🍗', 'Nuggets', 30, 'comida'),
       p('🍛', 'Milanesa con arroz', 25, 'comida'),
-      p('🌽', 'Elote', 15, 'comida'),
+      p('🌽', 'Elote', 10, 'comida'),
       p('🌮', 'Taco de guiso', 15, 'comida'),
       p('🌮', 'Taco de frijoles', 10, 'comida'),
       p('🥪', 'Torta', 15, 'comida'),
       p('🥪', 'Sándwich', 20, 'comida'),
       p('🍮', 'Postre', 10, 'postres'),
       p('🥛', 'Agua de horchata', 10, 'bebidas'),
-      p('🧃', 'Agua de sabor', 10, 'bebidas'),
+      p('🧃', 'Jugo', 10, 'bebidas'),
       p('💧', 'Agua natural', 10, 'bebidas'),
     ].forEach(x => s.productos.add(x));
   });

@@ -1,6 +1,6 @@
 // Guarda la app en el celular para que funcione sin internet.
 // Al cambiar cualquier archivo, sube el número de versión para que se actualice.
-const CACHE = 'tiendita-v14';
+const CACHE = 'tiendita-v15';
 const FUENTES = 'tiendita-fuentes';
 const ARCHIVOS = [
   './', './index.html', './manifest.json', './css/app.css',

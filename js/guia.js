@@ -7,7 +7,7 @@ const PASOS = [
     titulo: '1. Revisa tu menú',
     texto: [
       'En "Productos" están tus platillos con su precio. Toca ✏️ para cambiar un precio o el dibujito.',
-      'Revisa el precio del elote y agrega tus postres si quieres saber cuál se vende más.',
+      'Agrega uno por uno lo que vendes con "+ Nuevo producto": dibujito, nombre, precio y tipo (Comida, Postres o Bebidas).',
     ],
   },
   {
