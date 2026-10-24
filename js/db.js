@@ -14,7 +14,9 @@ export function abrir() {
   if (!dbp) {
     dbp = new Promise((res, rej) => {
       if (!window.indexedDB) { rej(new Error('Este navegador no permite guardar datos')); return; }
-      const r = indexedDB.open(modoPractica() ? 'tiendita-practica' : 'tiendita', 4);
+      // window.__dbNombre lo usa la página de pruebas para trabajar en su propia base.
+      const nombre = window.__dbNombre || (modoPractica() ? 'tiendita-practica' : 'tiendita');
+      const r = indexedDB.open(nombre, 4);
       r.onupgradeneeded = () => {
         for (const s of STORES) {
           if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s, { keyPath: 'id', autoIncrement: true });

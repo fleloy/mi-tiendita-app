@@ -9,6 +9,7 @@ import { h, llenar, leerLocal, guardarLocal, toast, dinero, hoyISO } from './uti
 import * as db from './db.js';
 import { abrirGuia, guiaVista } from './guia.js';
 import { pedirPin } from './pin.js';
+import { cerrarDia, nombreDia } from './cierre.js';
 
 const PANTALLAS = {
   vender: { mod: vender, titulo: 'Vender' },
@@ -80,12 +81,37 @@ async function revisarRespaldo() {
       return;
     }
   }
+  // El último día con ventas se quedó sin cerrar: recordarlo hasta que lo cierre o diga "Ahora no".
+  const pendiente = await diaSinCerrar();
+  if (pendiente) {
+    aviso.replaceChildren(h('div', { class: 'aviso-doble' },
+      h('button', { class: 'aviso-respaldo aviso-instalar', onclick: async () => {
+        await ir('reportes');
+        if (actual === 'reportes') await cerrarDia(pendiente);
+      } }, `🔒 No cerraste el ${nombreDia(pendiente)}. Toca para hacerlo.`),
+      h('button', { class: 'aviso-omitir', onclick: () => {
+        guardarLocal('cierreOmitido', hoyISO(pendiente));
+        revisarRespaldo();
+      } }, 'Ahora no')));
+    return;
+  }
   // Si nunca ha respaldado, contar desde su primera venta (no molestar el primer día).
   const ultimo = Number(leerLocal('ultimoRespaldo') || 0) || (await db.primero('ventas'))?.fecha;
   const dias = ultimo ? Math.floor((Date.now() - ultimo) / 864e5) : 0;
   aviso.replaceChildren(dias >= 3 && actual !== 'respaldo'
     ? h('button', { class: 'aviso-respaldo', onclick: () => ir('respaldo') }, `💾 Hace ${dias} días que no guardas un respaldo. Toca aquí.`)
     : '');
+}
+
+// El día más reciente (de la última semana, sin contar hoy) con ventas y sin cierre, o null.
+async function diaSinCerrar() {
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const ventas = (await db.getRango('ventas', hoy.getTime() - 7 * 864e5, hoy.getTime())).filter(v => !v.cancelada);
+  if (!ventas.length) return null;
+  const ultima = new Date(Math.max(...ventas.map(v => v.fecha)));
+  const dia = hoyISO(ultima);
+  if (leerLocal('cierreOmitido') === dia) return null;
+  return (await db.getAll('cierres')).some(c => c.dia === dia) ? null : ultima;
 }
 
 // Franja visible mientras se practica, para no confundirse con los datos reales.
@@ -119,8 +145,11 @@ function vigilarActualizaciones(reg) {
       if (sw.state === 'installed' && navigator.serviceWorker.controller) ofrecer(sw);
     });
   });
+  // La primera instalación también cambia el "controlador"; solo hay que recargar si ya había una versión.
+  let habiaVersion = !!navigator.serviceWorker.controller;
   let recargando = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!habiaVersion) { habiaVersion = true; return; }
     if (recargando) return;
     recargando = true;
     location.reload();

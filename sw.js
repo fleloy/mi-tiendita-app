@@ -1,11 +1,11 @@
 // Guarda la app en el celular para que funcione sin internet.
 // Al cambiar cualquier archivo, sube el número de versión para que se actualice.
-const CACHE = 'tiendita-v17';
+const CACHE = 'tiendita-v18';
 const FUENTES = 'tiendita-fuentes';
 const ARCHIVOS = [
   './', './index.html', './manifest.json', './css/app.css',
   './js/app.js', './js/util.js', './js/db.js', './js/vender.js', './js/pedidos.js',
-  './js/inventario.js', './js/clientes.js', './js/reportes.js', './js/respaldo.js', './js/cierre.js', './js/preparar.js', './js/guia.js', './js/instalar.js', './js/pin.js', './js/semana.js',
+  './js/inventario.js', './js/clientes.js', './js/reportes.js', './js/respaldo.js', './js/cierre.js', './js/preparar.js', './js/guia.js', './js/instalar.js', './js/pin.js', './js/semana.js', './js/mes.js',
   './icons/icon-192.png', './icons/icon-512.png',
 ];
 
@@ -26,6 +26,8 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  // La página de pruebas siempre prueba los archivos actuales, nunca los guardados.
+  if (e.request.url.includes('/pruebas/') || e.request.referrer.includes('/pruebas/')) return;
   // La letra de Google Fonts se guarda la primera vez que se descarga.
   if (/fonts\.(googleapis|gstatic)\.com$/.test(new URL(e.request.url).hostname)) {
     e.respondWith(caches.open(FUENTES).then(c => c.match(e.request).then(r => r || fetch(e.request).then(res => {

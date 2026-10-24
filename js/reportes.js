@@ -4,6 +4,7 @@ import * as db from './db.js';
 import { calcularResumen, cerrarDia, cierresRecientes, filaCierre } from './cierre.js';
 import { sugerencia } from './preparar.js';
 import { resumenSemana, textoResumen, graficaSemana } from './semana.js';
+import { abrirReporteMes } from './mes.js';
 
 const PERIODOS = {
   hoy: 'Hoy',
@@ -134,6 +135,7 @@ export async function render(el) {
         semana.cambio !== null && h('span', { class: semana.cambio >= 0 ? 'afavor' : 'debe' },
           `${semana.cambio >= 0 ? '▲' : '▼'} ${Math.abs(semana.cambio)}% vs. semana pasada`))),
     h('button', { class: 'btn grande', style: 'margin-top:10px', onclick: () => compartirTexto(textoResumen(semana)) }, '📤 Mandarme el resumen por WhatsApp'),
+    h('button', { class: 'btn grande', style: 'margin-top:8px', onclick: abrirReporteMes }, '📅 Reporte del mes'),
 
     h('h2', {}, '🧾 Gastos'),
     h('div', { class: 'periodos' }, rapidos.map(g =>

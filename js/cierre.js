@@ -26,29 +26,42 @@ export async function cierresRecientes() {
   return (await db.getAll('cierres')).sort((a, b) => b.fecha - a.fecha).slice(0, 7);
 }
 
-export async function cerrarDia() {
-  const inicio = new Date(); inicio.setHours(0, 0, 0, 0);
-  const r = await calcularResumen(inicio.getTime(), Infinity);
-  const v = await formulario('🔒 Cerrar el día', [
+const inicioDe = fecha => { const d = new Date(fecha); d.setHours(0, 0, 0, 0); return d; };
+export const nombreDia = fecha => new Date(fecha).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric' });
+
+// Guarda (o reemplaza) el cierre de un día. Separado de la ventana para poder probarlo.
+export async function guardarCierre(fecha, fondo, contado) {
+  const inicio = inicioDe(fecha);
+  const r = await calcularResumen(inicio.getTime(), inicio.getTime() + 864e5);
+  const esperado = r2(fondo + r.caja);
+  const dia = hoyISO(inicio);
+  const anterior = (await db.getAll('cierres')).find(c => c.dia === dia);
+  const cierre = {
+    ...(anterior && { id: anterior.id }),
+    dia, fecha: Date.now(), fondo, contado, esperado, diferencia: r2(contado - esperado),
+    vendido: r.vendido, gastado: r.gastado, ganancia: r.ganancia, fiado: r.fiado, ventas: r.ventas.length,
+  };
+  await db.put('cierres', cierre);
+  return cierre;
+}
+
+// Cierra hoy o un día anterior que se quedó sin cerrar.
+export async function cerrarDia(fecha = new Date()) {
+  fecha = new Date(fecha);
+  const esHoy = hoyISO(fecha) === hoyISO();
+  const v = await formulario(esHoy ? '🔒 Cerrar el día' : `🔒 Cerrar el ${nombreDia(fecha)}`, [
     { name: 'fondo', label: '¿Con cuánto cambio empezaste en la caja? ($)', type: 'number', min: 0 },
-    { name: 'contado', label: '¿Cuánto dinero hay ahorita en la caja? (cuéntalo) ($)', type: 'number', min: 0, required: true },
+    { name: 'contado', label: esHoy ? '¿Cuánto dinero hay ahorita en la caja? (cuéntalo) ($)' : '¿Cuánto dinero había en la caja al terminar ese día? ($)', type: 'number', min: 0, required: true },
   ], { fondo: leerLocal('fondo') ?? '' }, { textoBoton: 'Ver resultado' });
   if (!v) return;
   guardarLocal('fondo', String(v.fondo));
-
-  const esperado = r2(v.fondo + r.caja);
-  const diferencia = r2(v.contado - esperado);
-  const dia = hoyISO();
-  const anterior = (await db.getAll('cierres')).find(c => c.dia === dia);
-  await db.put('cierres', {
-    ...(anterior && { id: anterior.id }),
-    dia, fecha: Date.now(), fondo: v.fondo, contado: v.contado, esperado, diferencia,
-    vendido: r.vendido, gastado: r.gastado, ganancia: r.ganancia, fiado: r.fiado, ventas: r.ventas.length,
-  });
+  const c = await guardarCierre(fecha, v.fondo, v.contado);
+  const r = { vendido: c.vendido, gastado: c.gastado, ganancia: c.ganancia, fiado: c.fiado, ventas: { length: c.ventas } };
+  const { esperado, diferencia } = c;
   avisarCambio();
 
   const fila = (txt, valor) => h('div', { class: 'resumen-fila' }, h('span', {}, txt), h('b', {}, valor));
-  const m = modal('Cierre de hoy', [
+  const m = modal(esHoy ? 'Cierre de hoy' : `Cierre del ${nombreDia(fecha)}`, [
     h('div', { class: 'cambio' + (diferencia < 0 ? ' falta' : '') },
       diferencia === 0 ? h('span', {}, 'La caja', h('strong', {}, '✅ Cuadra'))
         : h('span', {}, diferencia > 0 ? 'Sobran' : 'Faltan', h('strong', {}, dinero(Math.abs(diferencia))))),
@@ -70,7 +83,7 @@ export async function cerrarDia() {
 export function filaCierre(c) {
   return h('div', { class: 'item' },
     h('div', { class: 'info' },
-      h('b', {}, new Date(c.fecha).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'short' })),
+      h('b', {}, new Date(`${c.dia}T12:00`).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'short' })),
       h('small', {}, `Ganó ${dinero(c.ganancia)} · vendió ${dinero(c.vendido)} · ${fechaCorta(c.fecha)}`)),
     h('div', { class: 'der ' + (c.diferencia < 0 ? 'debe' : 'afavor') },
       c.diferencia === 0 ? '✅ Cuadró' : `${c.diferencia > 0 ? 'Sobró' : 'Faltó'} ${dinero(Math.abs(c.diferencia))}`));

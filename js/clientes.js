@@ -119,6 +119,24 @@ export async function abrirCobroViernes() {
   if (deben.length) cobroViernes(deben);
 }
 
+export function textoRecibo(c, monto, saldoNuevo) {
+  return `Hola${c.tutor ? ' ' + c.tutor : ''} 👋, recibimos ${dinero(monto)} de la cuenta de ${c.nombre} en la tiendita. `
+    + `Saldo: ${textoSaldo(saldoNuevo)}. ¡Gracias!`;
+}
+
+// Después de un pago: confirmar y ofrecer mandarle el recibo a mamá o papá.
+function pagoGuardado(c, monto) {
+  const saldoNuevo = Math.round(((c.saldo || 0) + monto) * 100) / 100;
+  const m = modal('✅ Pago guardado', [
+    h('div', { class: 'total-grande ' + claseSaldo(saldoNuevo) }, textoSaldo(saldoNuevo)),
+    h('p', { class: 'etiqueta' }, `${c.nombre} pagó ${dinero(monto)}`),
+    h('div', { class: 'lista', style: 'margin-top:14px' },
+      h('button', { class: 'btn primario grande', onclick: () => { compartirTexto(textoRecibo(c, monto, saldoNuevo), c.telefono); m.cerrar(); } },
+        '📲 Mandar recibo por WhatsApp'),
+      h('button', { class: 'btn grande', onclick: () => m.cerrar() }, 'Listo')),
+  ]);
+}
+
 function cobroViernes(deben) {
   deben = [...deben].sort((a, b) => a.saldo - b.saldo);
   modal('📋 Lista para cobrar', [
@@ -150,8 +168,9 @@ async function detalle(c) {
     if (!v || v.monto <= 0) return;
     await db.movimientoCliente(c.id, signo * v.monto, tipo, v.nota);
     m.cerrar();
-    toast('Listo');
     avisarCambio();
+    if (tipo === 'abono') pagoGuardado(c, v.monto);
+    else toast('Listo');
   };
 
   const noVender = (c.noVender || []).map(id => productos.get(id)).filter(Boolean);

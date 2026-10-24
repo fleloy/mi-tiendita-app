@@ -25,7 +25,7 @@ const PASOS = [
     titulo: '3. Fiado y "se acabó"',
     texto: [
       'Para fiar toca "Fiado / a cuenta" al cobrar y elige al niño o maestro. Te avisa si se pasa de su límite.',
-      'El viernes, en "Cuentas", manda la cuenta a los papás por WhatsApp.',
+      'El viernes, en "Cuentas", manda la cuenta a los papás por WhatsApp. Cuando paguen, la app te ofrece mandarles su recibo.',
       'Si se acabó un platillo, déjalo presionado en "Vender". Mañana vuelve solo.',
     ],
   },
@@ -35,7 +35,7 @@ const PASOS = [
     texto: [
       'En "Ganancias" anota lo que gastaste y toca "Cerrar el día". Cuenta tu caja y la app te dice si cuadra.',
       'Guarda el respaldo y mándatelo por WhatsApp: así nunca pierdes tus datos.',
-      'En "Más" puedes poner un PIN para que nadie más vea tus ganancias ni borre cosas.',
+      'En "Más" puedes poner un PIN para que nadie más vea tus ganancias ni borre cosas, y activar el ☀️ Modo día si hay mucho sol.',
       'Para practicar sin miedo, en "Más" activa el Modo práctica.',
     ],
   },

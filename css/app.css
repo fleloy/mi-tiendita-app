@@ -363,3 +363,70 @@ button.item:active { border-color: var(--rosa); }
 
 /* Repetir pedido */
 .repetir { margin-top: 14px; border-style: dashed; border-color: var(--rosa); color: var(--rosa-claro); font-size: 1rem; line-height: 1.3; }
+
+/* Aviso con botón "Ahora no" */
+.aviso-doble { display: flex; align-items: stretch; }
+.aviso-doble .aviso-respaldo { flex: 1; }
+.aviso-omitir { border: 0; background: rgba(255, 110, 240, .08); color: var(--suave); padding: 0 14px; font-size: .85rem; white-space: nowrap; border-bottom: 1px solid rgba(255, 110, 240, .35); }
+
+/* Reporte del mes */
+.mes-nav { align-items: center; justify-content: space-between; flex-wrap: nowrap; margin-bottom: 10px; }
+.mes-nav .btn { flex: none; width: 52px; }
+.mes-nav b { font-size: 1.1rem; }
+.reporte-mes h3 { margin: 0 0 8px; font-size: 1rem; color: var(--rosa-claro); }
+.reporte-mes table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.reporte-mes th, .reporte-mes td { padding: 7px 4px; text-align: right; border-bottom: 1px solid var(--borde); white-space: nowrap; }
+.reporte-mes th:first-child, .reporte-mes td:first-child { text-align: left; text-transform: capitalize; }
+.reporte-mes thead th { color: var(--suave); font-weight: 500; }
+.reporte-mes tfoot th, .reporte-mes tfoot td { font-weight: 700; border-bottom: 0; border-top: 2px solid var(--rosa); }
+.reporte-mes p { font-size: .9rem; margin: 10px 0 0; }
+#impresion { display: none; }
+
+@media print {
+  body.imprimiendo { background: #fff !important; color: #000; padding: 0; max-width: none; }
+  body.imprimiendo > :not(#impresion) { display: none !important; }
+  body.imprimiendo #impresion { display: block; padding: 10mm; }
+  #impresion .reporte-mes h3 { color: #a50d5b; font-size: 18px; }
+  #impresion .reporte-mes table { font-size: 12px; }
+  #impresion .reporte-mes th, #impresion .reporte-mes td { color: #000; border-color: #ddd; }
+  #impresion .reporte-mes tfoot th, #impresion .reporte-mes tfoot td { border-top-color: #e0157d; }
+  #impresion .debe { color: #b3123a; }
+}
+
+/* ☀️ Modo día: mismos colores de la marca sobre fondo claro, para leer con sol directo */
+:root[data-tema="claro"] {
+  --fondo: #fff6fb;
+  --tarjeta: #ffffff;
+  --tarjeta-2: #fdf0f8;
+  --borde: #efd3e5;
+  --texto: #1d1420;
+  --suave: #66566f;
+  --rosa: #b0107a;
+  --rosa-claro: #940c63;
+  --cian: #08739a;
+  --rojo: #bf1f3d;
+  --amarillo: #7a5000;
+  --degradado: linear-gradient(135deg, #d8158f 0%, #a50d5b 100%);
+  --brillo: 0 4px 14px rgba(165, 13, 91, .25);
+  color-scheme: light;
+}
+[data-tema="claro"] body { background: radial-gradient(120% 60% at 50% -10%, rgba(224, 21, 125, .10), transparent 60%), var(--fondo); }
+[data-tema="claro"] .barra-sup { background: rgba(255, 246, 251, .92); }
+[data-tema="claro"] .barra-sup h1 { text-shadow: none; }
+[data-tema="claro"] .pestanas { background: rgba(255, 255, 255, .97); }
+[data-tema="claro"] .pestanas button.activa span { background: rgba(176, 16, 122, .12); }
+[data-tema="claro"] .ticket { background: rgba(255, 255, 255, .98); box-shadow: 0 -4px 24px rgba(29, 20, 32, .15); }
+[data-tema="claro"] .modal { background: #fffafd; box-shadow: 0 -10px 40px rgba(29, 20, 32, .18); }
+[data-tema="claro"] .modal::backdrop { background: rgba(29, 20, 32, .45); }
+[data-tema="claro"] #toast { background: #1d1420; color: #fff; }
+[data-tema="claro"] .buscar::placeholder, [data-tema="claro"] .campo input::placeholder { color: #8f7f98; }
+[data-tema="claro"] .prod .emoji { filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .2)); }
+[data-tema="claro"] .prod.agotado .stock { background: #1d1420; color: #fff; }
+[data-tema="claro"] .billetes .btn.sel { background: rgba(176, 16, 122, .10); }
+[data-tema="claro"] .cambio { background: rgba(8, 115, 154, .08); border-color: rgba(8, 115, 154, .35); }
+[data-tema="claro"] .cambio.falta { background: rgba(191, 31, 61, .08); border-color: rgba(191, 31, 61, .35); }
+[data-tema="claro"] .alerta { background: rgba(176, 16, 122, .06); border-color: rgba(176, 16, 122, .25); }
+[data-tema="claro"] .aviso-respaldo { background: #fff1d6; border-bottom-color: #f0d6a0; }
+[data-tema="claro"] .aviso-instalar, [data-tema="claro"] .aviso-omitir { background: #fbe3f2; border-bottom-color: #efc1de; }
+[data-tema="claro"] .tarjeta.ancha.perdida { background: linear-gradient(135deg, #d63a57, #9e1030); }
+[data-tema="claro"] .pedido .turno, [data-tema="claro"] .pin-puntos i.lleno { text-shadow: none; box-shadow: none; }

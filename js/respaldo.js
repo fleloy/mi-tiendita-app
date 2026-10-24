@@ -5,7 +5,7 @@ import { abrirGuia } from './guia.js';
 import { instalada, puedeInstalar, instalar } from './instalar.js';
 import { tienePin, pedirPin, ponerPin, cambiarPin, quitarPin } from './pin.js';
 
-export const VERSION = '4';
+export const VERSION = '5';
 
 function seccionInstalar() {
   if (instalada()) return h('p', { class: 'estado-datos' }, '✅ La app está instalada en este celular.');
@@ -51,6 +51,14 @@ export async function render(el) {
         guardarLocal('sonido', e.target.checked ? 'si' : 'no');
       } }),
       'Sonidos al cobrar y al entregar'),
+    h('label', { class: 'check', style: 'margin-top:12px' },
+      h('input', { type: 'checkbox', checked: leerLocal('tema') === 'claro', onchange: e => {
+        const claro = e.target.checked;
+        guardarLocal('tema', claro ? 'claro' : 'oscuro');
+        document.documentElement.dataset.tema = claro ? 'claro' : '';
+        document.querySelector('meta[name=theme-color]').content = claro ? '#fff6fb' : '#0b0a0e';
+      } }),
+      '☀️ Modo día (fondo claro, para leer con sol)'),
 
     h('h2', {}, '🔐 PIN'),
     h('p', {}, tienePin()
