@@ -430,3 +430,10 @@ button.item:active { border-color: var(--rosa); }
 [data-tema="claro"] .aviso-instalar, [data-tema="claro"] .aviso-omitir { background: #fbe3f2; border-bottom-color: #efc1de; }
 [data-tema="claro"] .tarjeta.ancha.perdida { background: linear-gradient(135deg, #d63a57, #9e1030); }
 [data-tema="claro"] .pedido .turno, [data-tema="claro"] .pin-puntos i.lleno { text-shadow: none; box-shadow: none; }
+
+/* Apartados ya pagados */
+.btn.apartar { border-style: dashed; border-color: var(--cian); color: var(--cian); font-size: 1rem; }
+.pedido.apartado { border-left-color: var(--cian); }
+.pedido.apartado .turno { text-shadow: none; }
+.pedido.apartado .etq { margin-left: 0; margin-bottom: 2px; }
+.pedido.apartado .info b { display: block; font-size: 1.25rem; }

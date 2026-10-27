@@ -25,7 +25,7 @@ function seccionVentas(todas, el) {
       h('small', {}, [
         periodo === 'hoy' ? hora(v.fecha) : fechaCorta(v.fecha),
         v.turno && `#${v.turno}`,
-        v.pago === 'cuenta' ? `fiado a ${v.clienteNombre || '?'}` : 'efectivo',
+        v.apartado ? `🎒 apartado de ${v.nombre}${v.entregado ? ' (entregado)' : ''}` : v.pago === 'cuenta' ? `fiado a ${v.clienteNombre || '?'}` : 'efectivo',
         v.cancelada && 'CANCELADA',
       ].filter(Boolean).join(' · '))),
     h('div', { class: 'der' }, dinero(v.total)),

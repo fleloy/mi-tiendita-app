@@ -22,9 +22,10 @@ const PASOS = [
   },
   {
     icono: '📒',
-    titulo: '3. Fiado y "se acabó"',
+    titulo: '3. Fiado, apartados y "se acabó"',
     texto: [
       'Para fiar toca "Fiado / a cuenta" al cobrar y elige al niño o maestro. Te avisa si se pasa de su límite.',
+      'Si un papá te paga en la mañana lo que comerá su hijo, toca los productos, "Cobrar" y "🎒 Apartado" con el nombre del niño. En el recreo aparece en "Entregar" como "Ya pagó".',
       'El viernes, en "Cuentas", manda la cuenta a los papás por WhatsApp. Cuando paguen, la app te ofrece mandarles su recibo.',
       'Si se acabó un platillo, déjalo presionado en "Vender". Mañana vuelve solo.',
     ],

@@ -43,8 +43,10 @@ async function pintar() {
 
 async function contarPedidos() {
   const boton = document.querySelector('[data-tab=pedidos]');
-  boton.hidden = !pedidos.activo();
-  const n = boton.hidden ? 0 : (await pedidos.pendientes()).length;
+  // Aunque la lista de pedidos esté apagada, la pestaña sale si hay apartados por entregar.
+  const pend = await pedidos.pendientes();
+  boton.hidden = !pedidos.activo() && !pend.some(v => v.apartado);
+  const n = boton.hidden ? 0 : pend.length;
   const badge = boton.querySelector('.badge');
   badge.textContent = n;
   badge.hidden = n === 0;

@@ -178,6 +178,15 @@ function cobrar() {
         if (c && !await avisoNoVender(c)) return;
         m.cerrar(); finalizar('efectivo', null, nombre.value.trim());
       } }, '✔ Cobrado')),
+    // Apartado pagado: el papá paga ahora y el niño lo recoge en el recreo (sin número de pedido).
+    h('button', { class: 'btn grande apartar', style: 'margin-top:10px', onclick: async () => {
+      if (pago != null && pago < tot) { toast('Todavía le falta dinero'); return; }
+      const quien = nombre.value.trim();
+      if (!quien) { toast('Escribe el nombre del niño'); nombre.focus(); return; }
+      const c = buscarCuenta(quien);
+      if (c && !await avisoNoVender(c)) return;
+      m.cerrar(); finalizar('efectivo', null, c?.nombre || quien, { apartado: true });
+    } }, '🎒 Apartado (ya pagó, lo recoge en el recreo)'),
   ]);
 }
 
@@ -207,10 +216,11 @@ async function revisarCuenta(c, tot) {
   return true;
 }
 
-async function finalizar(pago, cliente, nombre) {
-  const conPedido = pedidos.activo();
+async function finalizar(pago, cliente, nombre, { apartado = false } = {}) {
+  const conPedido = pedidos.activo() && !apartado;
   const venta = {
     ...(conPedido && { turno: await pedidos.siguienteTurno(), entregado: false, nombre: nombre || cliente?.nombre || '' }),
+    ...(apartado && { apartado: true, entregado: false, nombre }),
     fecha: Date.now(),
     items: ticket.map(({ p, cant }) => ({ productoId: p.id, nombre: p.nombre, precio: p.precio, costo: p.costo || 0, cant })),
     total: total(),
@@ -224,7 +234,8 @@ async function finalizar(pago, cliente, nombre) {
   ultimoPedido = ticket.map(t => ({ id: t.p.id, cant: t.cant }));
   ticket = [];
   avisarCambio();
-  const msg = (conPedido ? `Pedido #${venta.turno} · ` : '')
-    + (cliente ? `Anotado a ${cliente.nombre}: ${dinero(venta.total)}` : `Venta de ${dinero(venta.total)} guardada`);
+  const msg = apartado ? `🎒 Apartado de ${nombre} guardado (${dinero(venta.total)})`
+    : (conPedido ? `Pedido #${venta.turno} · ` : '')
+      + (cliente ? `Anotado a ${cliente.nombre}: ${dinero(venta.total)}` : `Venta de ${dinero(venta.total)} guardada`);
   toast(msg, { texto: 'Deshacer', fn: async () => { await db.cancelarVenta(id); avisarCambio(); toast('Venta cancelada'); } });
 }

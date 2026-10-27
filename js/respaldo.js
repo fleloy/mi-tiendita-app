@@ -5,7 +5,7 @@ import { abrirGuia } from './guia.js';
 import { instalada, puedeInstalar, instalar } from './instalar.js';
 import { tienePin, pedirPin, ponerPin, cambiarPin, quitarPin } from './pin.js';
 
-export const VERSION = '5';
+export const VERSION = '6';
 
 function seccionInstalar() {
   if (instalada()) return h('p', { class: 'estado-datos' }, '✅ La app está instalada en este celular.');
