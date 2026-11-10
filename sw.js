@@ -1,11 +1,11 @@
 // Guarda la app en el celular para que funcione sin internet.
 // Al cambiar cualquier archivo, sube el número de versión para que se actualice.
-const CACHE = 'tiendita-v19';
+const CACHE = 'tiendita-v20';
 const FUENTES = 'tiendita-fuentes';
 const ARCHIVOS = [
   './', './index.html', './manifest.json', './css/app.css',
   './js/app.js', './js/util.js', './js/db.js', './js/vender.js', './js/pedidos.js',
-  './js/inventario.js', './js/clientes.js', './js/reportes.js', './js/respaldo.js', './js/cierre.js', './js/preparar.js', './js/guia.js', './js/instalar.js', './js/pin.js', './js/semana.js', './js/mes.js',
+  './js/inventario.js', './js/clientes.js', './js/reportes.js', './js/respaldo.js', './js/cierre.js', './js/preparar.js', './js/guia.js', './js/instalar.js', './js/pin.js', './js/seguridad.js', './js/semana.js', './js/mes.js',
   './icons/icon-192.png', './icons/icon-512.png',
 ];
 

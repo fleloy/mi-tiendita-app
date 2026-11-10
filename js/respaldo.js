@@ -1,11 +1,13 @@
 // Pantalla "Más": guía, opciones, modo práctica y respaldo de datos (exportar / importar).
-import { h, llenar, toast, confirmar, fechaCorta, leerLocal, guardarLocal, avisarCambio, hoyISO } from './util.js';
+import { h, llenar, toast, confirmar, formulario, fechaCorta, leerLocal, guardarLocal, avisarCambio, hoyISO } from './util.js';
 import * as db from './db.js';
 import { abrirGuia } from './guia.js';
 import { instalada, puedeInstalar, instalar } from './instalar.js';
 import { tienePin, pedirPin, ponerPin, cambiarPin, quitarPin } from './pin.js';
+import { cifrar, descifrar, problemaEnRespaldo } from './seguridad.js';
 
-export const VERSION = '6';
+export const VERSION = '7';
+const MIN_CLAVE = 6;
 
 function seccionInstalar() {
   if (instalada()) return h('p', { class: 'estado-datos' }, '✅ La app está instalada en este celular.');
@@ -75,6 +77,7 @@ export async function render(el) {
       ? '🛡️ Tus datos están protegidos en este celular.'
       : '⚠️ Instala la app en la pantalla de inicio para que el celular no borre tus datos al liberar espacio.'),
     h('p', {}, 'Tus datos se guardan solo en este celular. Guarda un respaldo al cerrar el día y mándatelo por WhatsApp, por si se pierde o cambia el teléfono.'),
+    h('p', {}, 'El respaldo se guarda con una contraseña que tú eliges. Sin ella no se puede abrir.'),
     h('p', { class: 'etiqueta' }, ultimo ? `Último respaldo: ${fechaCorta(ultimo)}` : 'Todavía no has hecho ningún respaldo'),
     h('div', { class: 'lista', style: 'margin-top:10px' },
       h('button', { class: 'btn primario grande', onclick: exportar }, '📤 Guardar / compartir respaldo'),
@@ -101,14 +104,41 @@ function descargar(archivo) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
-async function archivoRespaldo(prefijo = 'tiendita-respaldo') {
+// Pide una contraseña nueva (dos veces). Devuelve null si se cancela.
+async function pedirClaveNueva(titulo) {
+  for (;;) {
+    const r = await formulario(titulo, [
+      { name: 'a', type: 'password', label: 'Contraseña', required: true },
+      { name: 'b', type: 'password', label: 'Escríbela otra vez', required: true },
+    ], {}, {
+      textoBoton: 'Guardar',
+      extra: () => h('p', { class: 'etiqueta' }, 'Esta contraseña abre el respaldo. Si la olvidas, el respaldo ya no se puede abrir. Apúntala en un lugar seguro.'),
+    });
+    if (!r) return null;
+    if (r.a.length < MIN_CLAVE) { toast(`La contraseña debe tener al menos ${MIN_CLAVE} caracteres`); continue; }
+    if (r.a !== r.b) { toast('Las contraseñas no coinciden. Intenta otra vez.'); continue; }
+    return r.a;
+  }
+}
+
+// Pide la contraseña de un respaldo que ya existe. Devuelve null si se cancela.
+async function pedirClave(titulo) {
+  const r = await formulario(titulo, [{ name: 'a', type: 'password', label: 'Contraseña del respaldo', required: true }], {}, { textoBoton: 'Abrir' });
+  return r ? r.a : null;
+}
+
+async function archivoRespaldo(clave, prefijo = 'tiendita-respaldo') {
   const datos = await db.exportarTodo();
   const nombre = `${prefijo}${db.modoPractica() ? '-PRACTICA' : ''}-${hoyISO()}.json`;
-  return new File([JSON.stringify(datos)], nombre, { type: 'application/json' });
+  const cifrado = await cifrar(JSON.stringify(datos.datos), clave);
+  const cuerpo = { app: 'tiendita', version: 2, cifrado: true, fecha: datos.fecha, ...cifrado };
+  return new File([JSON.stringify(cuerpo)], nombre, { type: 'application/json' });
 }
 
 export async function exportar() {
-  const archivo = await archivoRespaldo();
+  const clave = await pedirClaveNueva('Contraseña del respaldo');
+  if (!clave) return;
+  const archivo = await archivoRespaldo(clave);
   let compartido = false;
   if (navigator.canShare?.({ files: [archivo] })) {
     try { await navigator.share({ files: [archivo], title: 'Respaldo Tiendita' }); compartido = true; } catch { /* cancelado */ }
@@ -119,9 +149,9 @@ export async function exportar() {
   avisarCambio();
 }
 
-// Antes de reemplazar o borrar, guardar lo que hay por si fue un error.
-async function respaldoDeSeguridad() {
-  descargar(await archivoRespaldo('tiendita-antes-de-cambiar'));
+// Antes de reemplazar o borrar, guardar lo que hay por si fue un error (también con contraseña).
+async function respaldoDeSeguridad(clave) {
+  descargar(await archivoRespaldo(clave, 'tiendita-antes-de-cambiar'));
 }
 
 async function importar(e) {
@@ -130,11 +160,30 @@ async function importar(e) {
   if (!f) return;
   let json;
   try { json = JSON.parse(await f.text()); } catch { toast('Ese archivo no es un respaldo'); return; }
-  if (json?.app !== 'tiendita' || !Array.isArray(json.datos?.productos)) { toast('Ese archivo no es un respaldo de la tiendita'); return; }
-  const resumen = `${json.datos.productos.length} productos y ${(json.datos.ventas || []).length} ventas`;
+  if (json?.app !== 'tiendita') { toast('Ese archivo no es un respaldo de la tiendita'); return; }
+
+  let clave = null;
+  let datos = json.datos;
+  if (json.cifrado) {
+    clave = await pedirClave('Recuperar respaldo');
+    if (!clave) return;
+    try {
+      datos = JSON.parse(await descifrar(json, clave));
+    } catch { toast('Contraseña incorrecta o respaldo dañado'); return; }
+  }
+
+  const problema = problemaEnRespaldo(datos);
+  if (problema) { toast(`Ese respaldo no sirve: ${problema}`); return; }
+  // Un respaldo viejo (sin contraseña) se guarda de nuevo con una contraseña nueva.
+  if (!clave) {
+    clave = await pedirClaveNueva('Contraseña para la copia de seguridad');
+    if (!clave) return;
+  }
+
+  const resumen = `${datos.productos.length} productos y ${(datos.ventas || []).length} ventas`;
   if (!await confirmar(`Esto reemplaza TODO lo de este celular con el respaldo del ${fechaCorta(json.fecha)} (${resumen}). Antes se guardará una copia de lo que tienes ahora.`, 'Recuperar')) return;
-  await respaldoDeSeguridad();
-  await db.reemplazarTodo(json.datos);
+  await respaldoDeSeguridad(clave);
+  await db.reemplazarTodo(datos);
   toast('Respaldo recuperado');
   avisarCambio();
 }
@@ -142,7 +191,9 @@ async function importar(e) {
 async function borrarTodo() {
   if (!await pedirPin('Escribe tu PIN para borrar todo')) return;
   if (!await confirmar('Se borrarán productos, ventas y cuentas. Antes se guardará una copia por si acaso.', 'Borrar todo')) return;
-  await respaldoDeSeguridad();
+  const clave = await pedirClaveNueva('Contraseña para la copia de seguridad');
+  if (!clave) return;
+  await respaldoDeSeguridad(clave);
   await db.reemplazarTodo({});
   toast('Datos borrados');
   avisarCambio();
